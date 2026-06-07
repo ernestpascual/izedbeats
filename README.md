@@ -1,10 +1,12 @@
-# IZE – DJ Project Website
+# IZE! – DJ Project Website
 
 A cutting-edge, interactive DJ portfolio website featuring real-time facial recognition and cinematic visual effects. Experience music through an immersive web interface powered by advanced computer vision and creative coding.
 
 ## 🎵 About
 
-**IZE** is a DJ project website that combines music production with innovative web technology. Explore my music across multiple platforms while experiencing an interactive, face-tracked visual experience.
+**IZE!** is an experimental HTML-only DJ portfolio that combines music production with creative coding. This project explores what's possible with vanilla JavaScript and modern web APIs—no frameworks, no build tools, just pure web innovation. Explore my music across multiple platforms while experiencing an interactive, face-tracked visual experience.
+
+> **💡 Experimental Focus:** This is a lightweight, single-file experiment designed to maximize creative coding while keeping dependencies minimal. Everything runs in a single `index.html` file with zero external build processes.
 
 **Music Platforms:**
 
@@ -17,11 +19,13 @@ A cutting-edge, interactive DJ portfolio website featuring real-time facial reco
 
 ## 🛠️ Tech Stack
 
+A **lightweight, framework-free** experiment built with pure web standards:
+
 ### Frontend
 
-- **HTML5** – Semantic markup & responsive structure
+- **HTML5** – Semantic markup & responsive structure in a single file
 - **CSS3** – Advanced styling with CSS variables, flexbox, and fixed positioning
-- **Vanilla JavaScript** – Core interactivity and real-time processing
+- **Vanilla JavaScript** – No frameworks, no dependencies—just creative coding with core web APIs
 
 ### Computer Vision & Face Recognition
 
