@@ -1,6 +1,8 @@
-# IZE! – DJ Project Website
+# [IZE! – DJ Project Website](https://izedbeats.com/)
 
 A cutting-edge, interactive DJ portfolio website featuring real-time facial recognition and cinematic visual effects. Experience music through an immersive web interface powered by advanced computer vision and creative coding.
+
+Visit [izedbeats.com](https://izedbeats.com/)
 
 ## 🎵 About
 
