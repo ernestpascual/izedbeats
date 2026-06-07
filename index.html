@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IZE!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #ff3e3e;
+            --glass: rgba(20, 20, 20, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            margin: 0; 
+            background: #000; 
+            overflow: hidden; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #fff;
+        }
+
+        canvas { 
+            display: block; 
+            width: 100vw; 
+            height: 100vh; 
+            object-fit: cover;
+        }
+
+        /* ── LANDMARK LINK OVERLAYS ── */
+        #link-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 200;
+            pointer-events: none;
+        }
+
+        .landmark-link {
+            position: absolute;
+            pointer-events: auto;
+            text-decoration: none;
+            text-underline-offset: 3px;
+            text-decoration-thickness: 1px;
+            color: var(--link-color, #00B2FF);
+            font-family: 'Inter', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            padding: 2px 0;
+            background: none;
+            border: none;
+            transition: opacity 0.3s, transform 0.2s;
+            opacity: 0;
+        }
+
+        .landmark-link.visible {
+            opacity: 1;
+        }
+
+        .landmark-link:hover {
+            transform: scale(1.1);
+            text-shadow: 0 0 10px rgba(255,255,255,0.6);
+        }
+
+        #line-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 150;
+            pointer-events: none;
+        }
+
+        #line-overlay line {
+            stroke: var(--link-color, #00B2FF);
+            stroke-width: 1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #line-overlay line.visible {
+            opacity: 0.6;
+        }
+
+        #line-overlay circle {
+            fill: var(--link-color, #00B2FF);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #line-overlay circle.visible {
+            opacity: 0.8;
+        }
+
+        #logo {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+            width: 40px;
+            height: auto;
+            pointer-events: none;
+        }
+
+        #logo img {
+            width: 100%;
+            height: auto;
+            display: block;
+            /* Tint white SVG to #00B2FF */
+            filter: brightness(0) saturate(100%) invert(52%) sepia(93%) saturate(1900%) hue-rotate(176deg) brightness(1.05);
+        }
+
+        @media (max-width: 480px) {
+            #logo {
+                width: 28px;
+                top: 14px;
+                left: 14px;
+            }
+        }
+
+        #privacy {
+            position: fixed;
+            bottom: 14px;
+            right: 14px;
+            z-index: 300;
+        }
+
+        #privacy a {
+            font-family: 'Inter', sans-serif;
+            font-size: 8px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #00B2FF;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            text-decoration-thickness: 1px;
+            transition: color 0.2s;
+        }
+
+        #privacy a:hover {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* ── CONSENT SPLASH ── */
+        #consent {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            box-sizing: border-box;
+            transition: opacity 0.4s ease;
+        }
+
+        #consent.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #consent-logo {
+            width: 50px;
+            margin-bottom: 30px;
+        }
+
+        #consent-logo img {
+            width: 100%;
+            height: auto;
+            display: block;
+            filter: brightness(0) saturate(100%) invert(52%) sepia(93%) saturate(1900%) hue-rotate(176deg) brightness(1.05);
+        }
+
+        #consent p {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            line-height: 1.8;
+            max-width: 360px;
+            margin: 0 0 24px 0;
+        }
+
+        #consent p a {
+            color: var(--link-color, #00B2FF);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        #consent-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #000;
+            background: var(--link-color, #00B2FF);
+            border: none;
+            padding: 12px 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        #consent-btn:hover {
+            opacity: 0.85;
+        }
+
+        /* ── CAMERA ERROR MESSAGE ── */
+        #camera-error {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9998;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        #camera-error p {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            line-height: 1.8;
+            max-width: 360px;
+            margin: 0;
+        }
+
+        #camera-error .error-icon {
+            font-size: 28px;
+            margin-bottom: 20px;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Consent Splash -->
+    <div id="consent">
+        <div id="consent-logo"><img src="ize.png" alt="IZE" /></div>
+        <p>By clicking Start, you agree to our <a href="https://docs.google.com/document/d/1MMNRecqMcnHCLwZg1T7U5tKf-E4Bdj8mh50nIl--Cn8/edit?usp=sharing" target="_blank">Privacy Policy</a>. We do not record or store any video data.</p>
+        <button id="consent-btn" onclick="acceptAndStart()">I Accept</button>
+    </div>
+
+    <!-- Logo -->
+    <div id="logo">
+        <img src="ize.png" alt="IZE" />
+    </div>
+
+    <!-- SVG connector lines (disabled)
+    <svg id="line-overlay" xmlns="http://www.w3.org/2000/svg">
+        <circle id="dot-soundcloud" r="3" />
+        <line id="line-soundcloud" />
+        <circle id="dot-bandcamp" r="3" />
+        <line id="line-bandcamp" />
+        <circle id="dot-facebook" r="3" />
+        <line id="line-facebook" />
+        <circle id="dot-instagram" r="3" />
+        <line id="line-instagram" />
+        <circle id="dot-mixcloud" r="3" />
+        <line id="line-mixcloud" />
+        <circle id="dot-spotify" r="3" />
+        <line id="line-spotify" />
+    </svg>
+    -->
+
+    <!-- Link overlay container -->
+    <div id="link-overlay">
+        <a id="link-soundcloud" class="landmark-link" href="https://soundcloud.com/izemakesbeats" target="_blank">+ Soundcloud</a>
+        <a id="link-bandcamp" class="landmark-link" href="https://izedbeats.bandcamp.com/music" target="_blank">+ Bandcamp</a>
+        <a id="link-facebook" class="landmark-link" href="https://www.facebook.com/izedbeats/" target="_blank">+ Facebook</a>
+        <a id="link-instagram" class="landmark-link" href="https://www.instagram.com/izedbeats/" target="_blank">+ Instagram</a>
+        <a id="link-mixcloud" class="landmark-link" href="https://www.mixcloud.com/izedbeats/" target="_blank">+ Mixcloud</a>
+        <a id="link-spotify" class="landmark-link" href="https://open.spotify.com/artist/60jOGU1IiVZ4VSInmCDT5a" target="_blank">+ Spotify</a>
+    </div>
+
+    <!-- Privacy Policy -->
+    <div id="privacy">
+        <a href="https://docs.google.com/document/d/1MMNRecqMcnHCLwZg1T7U5tKf-E4Bdj8mh50nIl--Cn8/edit?usp=sharing" target="_blank">Privacy Policy</a>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <!-- MediaPipe Face Mesh via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const video = document.createElement('video');
+
+        // ══════════════════════════════════════════════
+        // ★ ADJUSTABLE SETTINGS — tweak these! ★
+        // ══════════════════════════════════════════════
+        const LINK_COLOR     = '#00B2FF'; // Color for link text, connector lines & dots
+        const EDGE_STRENGTH  = 0.2;   // Edge brightness multiplier (0.5 = subtle, 3.0 = very strong) (DONT CHANGE)
+        const EDGE_MIX       = 0.3;   // Blend ratio: 0 = no edges, 1 = edges only (DONT CHANGE)
+        const EDGE_BOOST     = 0.2;   // Extra additive glow on edges (0 = none, 1 = full)(DONT CHANGE)
+        const CONTRAST       = 2;   // Overall contrast (1.0 = normal, 2.0 = high) ETO
+        const TRAIL_FADE     = 0.1;  // Motion trail persistence (lower = longer trails) ETO
+        const GRAIN          = 1;  // Film grain intensity (0 = none, 1 = maximum)
+        const H_BLUR         = 2;    // Horizontal motion blur radius in pixels (0 = off)
+        const VIGNETTE_ON    = true;  // Dark edges
+        const SCRATCHES_ON   = true;  // Random film scratches
+        const FLICKER_ON     = true;  // Random brightness flicker
+        const AUDIO_TRIM_END = 0.135;     // Trim audio end by this many seconds (0 = no trim, use full length)
+        // ══════════════════════════════════════════════
+
+        // Apply link color as CSS variable
+        document.documentElement.style.setProperty('--link-color', LINK_COLOR);
+
+        // ══════════════════════════════════════════════
+        // ★ LANDMARK → LINK MAPPING ★
+        // ══════════════════════════════════════════════
+        const LINE_GAP = 8; // px gap between end of line and start of text
+        const LANDMARK_LINKS = [
+            { elementId: 'link-soundcloud', landmarkIndex: 354, offsetX: 120,  offsetY: -30,  align: 'left'   },  // Right Cheekbone → label right
+            { elementId: 'link-bandcamp',   landmarkIndex: 105, offsetX: -120, offsetY: -30,  align: 'right'  },  // Left Temple → label left
+            { elementId: 'link-facebook',   landmarkIndex: 17,  offsetX: 0,    offsetY: 60,   align: 'center-top' },  // Lower Lip → label below
+            { elementId: 'link-instagram',  landmarkIndex: 473, offsetX: 200, offsetY: -50,  align: 'right'  },  // Left Iris → label upper-left
+            { elementId: 'link-mixcloud',   landmarkIndex: 356, offsetX: 100,  offsetY: 20,   align: 'left'   },  // Right Ear → label right
+            { elementId: 'link-spotify',    landmarkIndex: 10,  offsetX: 0,    offsetY: -60,  align: 'center-bottom' },  // Forehead → label above
+        ];
+        // ══════════════════════════════════════════════
+
+        let offCanvas, offCtx, blurCanvas, blurCtx;
+        let W, H;
+        let latestLandmarks = null;  // Stores the most recent face landmarks
+
+        // ──────────────────────────────────────────
+        // MEDIAPIPE FACE MESH SETUP
+        // ──────────────────────────────────────────
+        let faceMesh;
+
+        function initFaceMesh() {
+            faceMesh = new FaceMesh({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+                }
+            });
+
+            faceMesh.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: true,  // Needed for iris landmarks (468+)
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5,
+            });
+
+            faceMesh.onResults(onFaceMeshResults);
+        }
+
+        function onFaceMeshResults(results) {
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                latestLandmarks = results.multiFaceLandmarks[0];
+                updateLinkPositions();
+            } else {
+                latestLandmarks = null;
+                hideLinkOverlays();
+            }
+        }
+
+        // ──────────────────────────────────────────
+        // LINK POSITION UPDATES
+        // ──────────────────────────────────────────
+        function updateLinkPositions() {
+            if (!latestLandmarks) return;
+
+            // MediaPipe gives normalized coords (0-1) relative to the video.
+            // We need to map them to screen coords, accounting for the crop.
+            const vw = video.videoWidth, vh = video.videoHeight;
+            if (!vw || !vh) return;
+
+            const videoAspect = vw / vh;
+            const canvasAspect = W / H;
+
+            // Compute the crop region (same logic as render)
+            let sx, sy, sw, sh;
+            if (videoAspect > canvasAspect) {
+                sh = vh; sw = vh * canvasAspect;
+                sx = (vw - sw) / 2; sy = 0;
+            } else {
+                sw = vw; sh = vw / canvasAspect;
+                sx = 0; sy = (vh - sh) / 2;
+            }
+
+            LANDMARK_LINKS.forEach(({ elementId, landmarkIndex, offsetX, offsetY, align }) => {
+                // const key = elementId.replace('link-', '');
+                const el = document.getElementById(elementId);
+                // const lineEl = document.getElementById(`line-${key}`);
+                // const dotEl = document.getElementById(`dot-${key}`);
+                if (!el) return;
+
+                if (landmarkIndex >= latestLandmarks.length) {
+                    el.classList.remove('visible');
+                    // if (lineEl) lineEl.classList.remove('visible');
+                    // if (dotEl) dotEl.classList.remove('visible');
+                    return;
+                }
+
+                const lm = latestLandmarks[landmarkIndex];
+
+                // lm.x and lm.y are normalized (0–1) to the video dimensions
+                const pixelX = lm.x * vw;
+                const pixelY = lm.y * vh;
+
+                // Map from video pixel space to canvas/screen space
+                // Mirror X since front camera is mirrored
+                const landmarkScreenX = W - ((pixelX - sx) / sw) * W;
+                const landmarkScreenY = ((pixelY - sy) / sh) * H;
+
+                // Label position = landmark + offset
+                const labelX = landmarkScreenX + offsetX;
+                const labelY = landmarkScreenY + offsetY;
+
+                // Only show if within bounds
+                if (landmarkScreenX >= 0 && landmarkScreenX <= W && landmarkScreenY >= 0 && landmarkScreenY <= H) {
+                    // Position the label with proper alignment
+                    el.style.left = `${labelX}px`;
+                    el.style.top = `${labelY}px`;
+
+                    // CSS transform based on alignment so text doesn't overlap the line
+                    switch (align) {
+                        case 'left':          // Text is to the right of landmark, left-align it
+                            el.style.transform = 'translate(0, -50%)';
+                            break;
+                        case 'right':         // Text is to the left of landmark, right-align it
+                            el.style.transform = 'translate(-100%, -50%)';
+                            break;
+                        case 'center-top':    // Text is below landmark, center above line end
+                            el.style.transform = 'translate(-50%, 0)';
+                            break;
+                        case 'center-bottom': // Text is above landmark, center below line end
+                            el.style.transform = 'translate(-50%, -100%)';
+                            break;
+                        default:
+                            el.style.transform = 'translate(-50%, -50%)';
+                    }
+
+                    el.classList.add('visible');
+
+                    // // Shorten the line so it stops before the text (gap)
+                    // const dx = labelX - landmarkScreenX;
+                    // const dy = labelY - landmarkScreenY;
+                    // const dist = Math.sqrt(dx * dx + dy * dy);
+                    // const shortenRatio = dist > 0 ? Math.max(0, (dist - LINE_GAP) / dist) : 0;
+                    // const lineEndX = landmarkScreenX + dx * shortenRatio;
+                    // const lineEndY = landmarkScreenY + dy * shortenRatio;
+
+                    // // Draw connector line from landmark dot to near the label
+                    // if (lineEl) {
+                    //     lineEl.setAttribute('x1', landmarkScreenX);
+                    //     lineEl.setAttribute('y1', landmarkScreenY);
+                    //     lineEl.setAttribute('x2', lineEndX);
+                    //     lineEl.setAttribute('y2', lineEndY);
+                    //     lineEl.classList.add('visible');
+                    // }
+
+                    // // Draw dot at the landmark point
+                    // if (dotEl) {
+                    //     dotEl.setAttribute('cx', landmarkScreenX);
+                    //     dotEl.setAttribute('cy', landmarkScreenY);
+                    //     dotEl.classList.add('visible');
+                    // }
+                } else {
+                    el.classList.remove('visible');
+                    // if (lineEl) lineEl.classList.remove('visible');
+                    // if (dotEl) dotEl.classList.remove('visible');
+                }
+            });
+        }
+
+        function hideLinkOverlays() {
+            LANDMARK_LINKS.forEach(({ elementId }) => {
+                // const key = elementId.replace('link-', '');
+                const el = document.getElementById(elementId);
+                // const lineEl = document.getElementById(`line-${key}`);
+                // const dotEl = document.getElementById(`dot-${key}`);
+                if (el) el.classList.remove('visible');
+                // if (lineEl) lineEl.classList.remove('visible');
+                // if (dotEl) dotEl.classList.remove('visible');
+            });
+        }
+
+        // ──────────────────────────────────────────
+        // CAMERA INIT
+        // ──────────────────────────────────────────
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 1280, height: 720 }, 
+                    audio: false 
+                });
+                video.srcObject = stream;
+                video.play();
+                
+                video.onloadedmetadata = () => {
+                    resize();
+                    requestAnimationFrame(render);
+
+                    // Start MediaPipe face detection loop
+                    initFaceMesh();
+                    detectLoop();
+                };
+            } catch (err) {
+                console.error("Camera error:", err);
+                showCameraError();
+            }
+        }
+
+        function showCameraError() {
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'camera-error';
+            errorDiv.innerHTML = `
+                <div class="error-icon">📷</div>
+                <p>Please enable your camera to experience this site.<br><br>
+                Go to your browser settings and allow camera access, then refresh the page.</p>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+
+        // Send frames to MediaPipe at ~15fps (don't need 60fps for landmarks)
+        async function detectLoop() {
+            if (faceMesh && video.readyState >= 2) {
+                await faceMesh.send({ image: video });
+            }
+            setTimeout(detectLoop, 66); // ~15fps
+        }
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            
+            offCanvas = document.createElement('canvas');
+            offCanvas.width = W; offCanvas.height = H;
+            offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+            
+            blurCanvas = document.createElement('canvas');
+            blurCanvas.width = W; blurCanvas.height = H;
+            blurCtx = blurCanvas.getContext('2d');
+        }
+
+        // ──────────────────────────────────────────
+        // HORIZONTAL MOTION BLUR
+        // ──────────────────────────────────────────
+        function horizontalMotionBlur(srcCanvas, radius) {
+            blurCtx.clearRect(0, 0, W, H);
+            const passes = 12;
+            const a = 1 / passes;
+            blurCtx.globalAlpha = a;
+            
+            for (let i = 0; i < passes; i++) {
+                const t = i / (passes - 1);
+                const offset = (t - 0.5) * 2 * radius;
+                blurCtx.drawImage(srcCanvas, offset, 0);
+            }
+            
+            blurCtx.globalAlpha = 1;
+            return blurCanvas;
+        }
+
+        // ──────────────────────────────────────────
+        // FILM GRAIN
+        // ──────────────────────────────────────────
+        function applyGrain(targetCtx, opacity) {
+            const imageData = targetCtx.getImageData(0, 0, W, H);
+            const d = imageData.data;
+            const strength = 60 * opacity;
+            
+            for (let i = 0; i < d.length; i += 4) {
+                const noise = (Math.random() - 0.5) * strength;
+                d[i]     = Math.min(255, Math.max(0, d[i] + noise));
+                d[i + 1] = Math.min(255, Math.max(0, d[i + 1] + noise));
+                d[i + 2] = Math.min(255, Math.max(0, d[i + 2] + noise));
+            }
+            targetCtx.putImageData(imageData, 0, 0);
+        }
+
+        // ──────────────────────────────────────────
+        // VIGNETTE
+        // ──────────────────────────────────────────
+        function applyVignette(targetCtx) {
+            const cx = W / 2, cy = H / 2;
+            const r = Math.max(W, H) * 0.7;
+            const grad = targetCtx.createRadialGradient(cx, cy, r * 0.3, cx, cy, r);
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.5)');
+            targetCtx.fillStyle = grad;
+            targetCtx.fillRect(0, 0, W, H);
+        }
+
+        // ──────────────────────────────────────────
+        // SCRATCHES
+        // ──────────────────────────────────────────
+        function applyScratches(targetCtx) {
+            if (Math.random() > 0.08) return;
+            targetCtx.beginPath();
+            targetCtx.strokeStyle = `rgba(255, 255, 255, ${Math.random() * 0.12})`;
+            targetCtx.lineWidth = 0.5;
+            const x = Math.random() * W;
+            targetCtx.moveTo(x, 0);
+            targetCtx.lineTo(x + (Math.random() - 0.5) * 20, H);
+            targetCtx.stroke();
+        }
+
+        // ──────────────────────────────────────────
+        // MAIN RENDER LOOP
+        // ──────────────────────────────────────────
+        function render() {
+            if (!offCtx) { requestAnimationFrame(render); return; }
+
+            // 1. FADE previous frame (motion trails)
+            ctx.fillStyle = `rgba(0, 0, 0, ${TRAIL_FADE})`;
+            ctx.fillRect(0, 0, W, H);
+
+            // Flicker
+            if (FLICKER_ON && Math.random() > 0.93) {
+                ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.04})`;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // 2. CAPTURE VIDEO FRAME
+            offCtx.fillStyle = '#000';
+            offCtx.fillRect(0, 0, W, H);
+
+            const vw = video.videoWidth, vh = video.videoHeight;
+            if (!vw || !vh) { requestAnimationFrame(render); return; }
+            
+            const videoAspect = vw / vh;
+            const canvasAspect = W / H;
+            let sx, sy, sw, sh;
+            
+            if (videoAspect > canvasAspect) {
+                sh = vh; sw = vh * canvasAspect;
+                sx = (vw - sw) / 2; sy = 0;
+            } else {
+                sw = vw; sh = vw / canvasAspect;
+                sx = 0; sy = (vh - sh) / 2;
+            }
+            
+            offCtx.drawImage(video, sx, sy, sw, sh, 0, 0, W, H);
+
+            // 3. GRAYSCALE + CONTRAST
+            const frame = offCtx.getImageData(0, 0, W, H);
+            const data = frame.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                let avg = data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114;
+                avg = (avg - 128) * CONTRAST + 128;
+                avg = Math.min(255, Math.max(0, avg));
+                data[i] = data[i+1] = data[i+2] = avg;
+            }
+
+            // 4. EDGE DETECTION (Sobel)
+            const edgeData = new Uint8ClampedArray(data.length);
+
+            for (let y = 1; y < H - 1; y++) {
+                for (let x = 1; x < W - 1; x++) {
+                    const idx = (y * W + x) * 4;
+                    
+                    // 3x3 neighborhood
+                    const tl = data[((y-1)*W + (x-1)) * 4];
+                    const tc = data[((y-1)*W + x) * 4];
+                    const tr = data[((y-1)*W + (x+1)) * 4];
+                    const ml = data[(y*W + (x-1)) * 4];
+                    const mr = data[(y*W + (x+1)) * 4];
+                    const bl = data[((y+1)*W + (x-1)) * 4];
+                    const bc = data[((y+1)*W + x) * 4];
+                    const br = data[((y+1)*W + (x+1)) * 4];
+
+                    // Sobel
+                    const gx = (-tl + tr - 2*ml + 2*mr - bl + br);
+                    const gy = (-tl - 2*tc - tr + bl + 2*bc + br);
+                    let edge = Math.sqrt(gx*gx + gy*gy) * EDGE_STRENGTH;
+                    edge = Math.min(255, edge);
+
+                    // Blend edges with original
+                    const orig = data[idx];
+                    const blended = Math.min(255, orig * (1 - EDGE_MIX) + edge * EDGE_MIX + edge * EDGE_BOOST);
+                    edgeData[idx] = edgeData[idx+1] = edgeData[idx+2] = blended;
+                    edgeData[idx+3] = 255;
+                }
+            }
+
+            // Copy result back
+            for (let i = 0; i < data.length; i += 4) {
+                if (edgeData[i+3]) {
+                    data[i] = edgeData[i];
+                    data[i+1] = edgeData[i+1];
+                    data[i+2] = edgeData[i+2];
+                }
+            }
+            offCtx.putImageData(frame, 0, 0);
+
+            // 5. HORIZONTAL MOTION BLUR
+            let sourceCanvas = offCanvas;
+            if (H_BLUR > 0) {
+                sourceCanvas = horizontalMotionBlur(offCanvas, H_BLUR);
+            }
+
+            // 6. COMPOSITE
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = 0.6;
+            ctx.drawImage(sourceCanvas, 0, 0);
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
+
+            // 7. POST-FX
+            if (VIGNETTE_ON)  applyVignette(ctx);
+            if (GRAIN > 0)    applyGrain(ctx, GRAIN);
+            if (SCRATCHES_ON) applyScratches(ctx);
+
+            requestAnimationFrame(render);
+        }
+
+        // ──────────────────────────────────────────
+        // START
+        // ──────────────────────────────────────────
+        window.addEventListener('resize', resize);
+
+        function acceptAndStart() {
+            const consent = document.getElementById('consent');
+            consent.classList.add('hidden');
+            setTimeout(() => consent.remove(), 500);
+            // Music Code
+            // Start looping background music
+            // const audio = new Audio('izedbeatswebsite.mp3');
+            // audio.loop = true;
+            // audio.volume = 1.0;
+
+            // // Trim the end: loop back early if AUDIO_TRIM_END > 0
+            // if (AUDIO_TRIM_END > 0) {
+            //     audio.addEventListener('loadedmetadata', () => {
+            //         const loopEnd = Math.max(0, audio.duration - AUDIO_TRIM_END);
+            //         audio.addEventListener('timeupdate', () => {
+            //             if (audio.currentTime >= loopEnd) {
+            //                 audio.currentTime = 0;
+            //             }
+            //         });
+            //     });
+            // }
+
+            // audio.play();
+
+            initCamera();
+        }
+    </script>
+</body>
+</html>
